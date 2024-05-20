@@ -1,0 +1,18 @@
+[package]
+name = "mini"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+crossterm = "0.27"
+indexmap = "2"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "clist"
+harness = false
