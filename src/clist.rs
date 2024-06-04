@@ -650,6 +650,18 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn test_with_capacity() {
+        let mut clist = CList::with_capacity(0);
+        let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
+        let c_addr = clist.insert_ref('c', a_addr, true);
+        assert_eq!(clist.collect(), vec!['a', 'c']);
+        let _b_addr = clist.insert_ref('b', c_addr, true);
+        assert_eq!(clist.len(), 3);
+        assert_eq!(clist.collect(), vec!['a', 'c', 'b']);
+    }
+
+    #[test]
     fn test_from_slice() {
         let assert_from_slice_roundtrip = |slice| {
             let clist = CList::from_slice(slice);
@@ -662,6 +674,21 @@ mod tests {
         assert_from_slice_roundtrip(&['a', 'b']);
         assert_from_slice_roundtrip(&['a', 'b', 'c']);
     }
+
+    #[test]
+    fn test_from_vec() {
+        let assert_from_vec_roundtrip = |vec: Vec<_>| {
+            let clist = CList::from_vec(vec.clone());
+            assert_eq!(clist.collect(), vec) ;
+            assert_eq!(clist.collect_rev(), vec);
+        };
+
+        assert_from_vec_roundtrip(vec![]);
+        assert_from_vec_roundtrip(vec!['a']);
+        assert_from_vec_roundtrip(vec!['a', 'b']);
+        assert_from_vec_roundtrip(vec!['a', 'b', 'c']);
+    }
+
 
     #[test]
     fn test_insert_ref() {
@@ -697,6 +724,28 @@ mod tests {
 
         clist.remove(b_addr);
         assert_eq!(clist.len(), 0);
+    }
+
+    #[test]
+    fn test_is_empty() {
+       let mut clist = CList::with_capacity(2);
+       assert_eq!(clist.is_empty(), true);
+
+       let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
+       assert_eq!(clist.is_empty(), false);
+
+       clist.remove(a_addr);
+       assert_eq!(clist.is_empty(), true);
+
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_assert_not_free(){
+        let mut clist = CList::with_capacity(2);
+        let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
+        clist.remove(a_addr);
+        clist.assert_not_free(&a_addr);
     }
 
     #[test]
