@@ -21,7 +21,7 @@ impl Hasher for MemHasher {
     }
 }
 
-///A builder for `MemHasher`.
+/// A builder for `MemHasher`.
 #[derive(Clone, Default)]
 struct BuildMemHasher;
 
@@ -33,7 +33,7 @@ impl BuildHasher for BuildMemHasher {
     }
 }
 
-///A builder for `MemHasher`.
+/// This simple memory implementation reuses slots that were once free'd
 #[derive(Clone, Default)]
 struct Mem<T> {
     data: Vec<T>,
@@ -48,13 +48,13 @@ impl<T> Mem<T> {
             available: IndexSet::with_hasher(BuildMemHasher),
         }
     }
-    
+
     /// Creates a `Mem` with specified capacity.
     fn with_capacity(n: usize) -> Self {
         Mem::raw(Vec::with_capacity(n))
     }
 
-    /// Allocates an item and returns it's address;
+    /// Allocates an item and returns its address;
     fn intern(&mut self, t: T) -> usize {
         if let Some(addr) = self.available.pop() {
             self.data[addr] = t;
@@ -66,22 +66,22 @@ impl<T> Mem<T> {
         }
     }
 
-    /// Gets a reference to an item by it's address.
+    /// Gets a reference to an item by its address.
     fn get(&self, addr: usize) -> &T {
         &self.data[addr]
     }
 
-    /// Gets a mutable reference to an item by it's address.
+    /// Gets a mutable reference to an item by its address.
     fn get_mut(&mut self, addr: usize) -> &mut T {
         &mut self.data[addr]
     }
-    
-    /// Frees and alocated slot.
+
+    /// Frees an alocated slot.
     fn free(&mut self, addr: usize) {
         self.available.insert(addr);
     }
 
-    /// Checks if a slot if not free.
+    /// Checks if a slot is not free.
     fn not_free(&self, addr: &usize) -> bool {
         !self.available.contains(addr)
     }
@@ -96,7 +96,6 @@ struct Node<T> {
 }
 
 impl<T> Node<T> {
-    
     /// Creates a root node with no data.
     fn root() -> Self {
         Self {
@@ -126,16 +125,15 @@ pub struct CList<T> {
 pub const ROOT_ADDR: usize = 0;
 
 impl<T> CList<T> {
-    
-    /// Creates a list with specified capacity.
+    /// Creates a CList with specified capacity.
     ///
     /// # Arguments
     ///
     /// * `n` - The capacity of the list.
     ///
-    /// # Returns 
+    /// # Returns
     ///
-    /// A  `CList` with the specified capacity.
+    /// A `CList` with the specified capacity.
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         let mut mem = Mem::with_capacity(n + 1);
@@ -143,15 +141,15 @@ impl<T> CList<T> {
         Self { mem, len: 0 }
     }
 
-    /// Creates a list from a slice. 
+    /// Creates a CList from a slice.
     ///
     /// # Arguments
     ///
-    /// * `slice` - A slice of elements. 
+    /// * `slice` - A slice of elements.
     ///
-    /// # Returns 
+    /// # Returns
     ///
-    /// A  `CList` containing the elements of the slice. 
+    /// A  `CList` containing the elements of the slice.
     pub fn from_slice(slice: &[T]) -> Self
     where
         T: Clone,
@@ -173,16 +171,16 @@ impl<T> CList<T> {
         }
     }
 
-    /// Creates a list from a vector.
+    /// Creates a CList from a vector.
     ///
     /// # Arguments
     ///
-    /// * `vec` - A vector of elements. 
+    /// * `vec` - A vector of elements.
     ///
-    /// # Returns 
+    /// # Returns
     ///
     /// A  `CList` containing the elements of the vector.
-   pub fn from_vec(vec: Vec<T>) -> Self
+    pub fn from_vec(vec: Vec<T>) -> Self
     where
         T: Clone,
     {
@@ -209,17 +207,17 @@ impl<T> CList<T> {
 
     /// Returns the number of elements in the list.
     ///
-    /// # Returns 
+    /// # Returns
     ///
     /// The number of elements in the list.
-   #[inline]
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
 
     /// Checks if the list is empty
     ///
-    /// # Returns 
+    /// # Returns
     ///
     /// `true` if the list is empty, `false` otherwise.
     #[inline]
@@ -238,6 +236,8 @@ impl<T> CList<T> {
 
     /// Gets a reference to the data at the given node address.
     ///
+    /// It panics if ROOT_ADDR is provided because the root node has no data.
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node.
@@ -245,7 +245,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// A reference to the data at the node address.
-   #[inline]
+    #[inline]
     pub fn get(&self, node_addr: usize) -> &T {
         self.assert_not_free(&node_addr);
         self.mem
@@ -256,7 +256,7 @@ impl<T> CList<T> {
     }
 
     /// Gets a mutable reference to the data at the given node address.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node.
@@ -275,7 +275,7 @@ impl<T> CList<T> {
     }
 
     /// Gets the previous node address of the given node address.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node.
@@ -283,14 +283,14 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The previous node address.
-   #[inline]
+    #[inline]
     pub fn prev(&self, node_addr: usize) -> usize {
         self.assert_not_free(&node_addr);
         self.mem.get(node_addr).prev
     }
 
     /// Gets the next node address of the given node address.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node.
@@ -298,14 +298,14 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The next node address.
-   #[inline]
+    #[inline]
     pub fn next(&self, node_addr: usize) -> usize {
         self.assert_not_free(&node_addr);
         self.mem.get(node_addr).next
     }
 
     /// Gets the address of the first node.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node.
@@ -313,13 +313,13 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the first node.
-   #[inline]
+    #[inline]
     pub fn first_addr(&self) -> usize {
         self.next(ROOT_ADDR)
     }
 
     /// Gets the address of the last node.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node.
@@ -327,13 +327,13 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the last node.
-   #[inline]
+    #[inline]
     pub fn last_addr(&self) -> usize {
         self.prev(ROOT_ADDR)
     }
 
     /// Inserts a new node with the given data before or after a reference node.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `t` - the data to insert.
@@ -343,7 +343,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the new node.
-   pub fn insert_ref(&mut self, t: T, ref_node_addr: usize, after: bool) -> usize {
+    pub fn insert_ref(&mut self, t: T, ref_node_addr: usize, after: bool) -> usize {
         self.assert_not_free(&ref_node_addr);
         let new_node_addr = self.mem.intern(Node::init(t));
         let ref_node = self.mem.get_mut(ref_node_addr);
@@ -370,7 +370,7 @@ impl<T> CList<T> {
     }
 
     /// Removes a node at the given address.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the address of the node to be removed.
@@ -378,7 +378,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the next node.
-  pub fn remove(&mut self, node_addr: usize) -> usize {
+    pub fn remove(&mut self, node_addr: usize) -> usize {
         if node_addr == ROOT_ADDR {
             return node_addr;
         }
@@ -393,7 +393,7 @@ impl<T> CList<T> {
     }
 
     /// Removes at max `n` nodes starting from the given address.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `node_addr` - the starting address to the node to remove.
@@ -402,7 +402,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the node after the last removed node.
-   pub fn remove_n(&mut self, mut node_addr: usize, n: usize) -> usize {
+    pub fn remove_n(&mut self, mut node_addr: usize, n: usize) -> usize {
         self.assert_not_free(&node_addr);
         let left = self.mem.get(node_addr).prev;
         let mut removed = 0;
@@ -421,7 +421,7 @@ impl<T> CList<T> {
     }
 
     /// Inserts multiple nodes to the right of the reference node.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `ref_node_addr` - The address of the reference node.
@@ -430,7 +430,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the last inserted node.
-   #[inline]
+    #[inline]
     pub fn insert_iter_right<I: IntoIterator<Item = T>>(
         &mut self,
         ref_node_addr: usize,
@@ -442,7 +442,7 @@ impl<T> CList<T> {
     }
 
     /// Inserts multiple nodes to the left of the reference node.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `ref_node_addr` - The address of the reference node.
@@ -451,7 +451,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The address of the last inserted node.
-   #[inline]
+    #[inline]
     pub fn insert_iter_left<I: IntoIterator<Item = T>>(
         &mut self,
         ref_node_addr: usize,
@@ -466,7 +466,7 @@ impl<T> CList<T> {
     }
 
     /// Fills a buffer with the data from the list starting from a given node address.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `buf` - The buffer to fill.
@@ -476,7 +476,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// The filled buffer.
-   fn populate_buf(&self, mut buf: Vec<T>, mut node_addr: usize) -> Vec<T>
+    fn populate_buf(&self, mut buf: Vec<T>, mut node_addr: usize) -> Vec<T>
     where
         T: Clone,
     {
@@ -498,7 +498,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// A vector containing all the elements in the list.
-   #[inline]
+    #[inline]
     pub fn collect(&self) -> Vec<T>
     where
         T: Clone,
@@ -514,11 +514,11 @@ impl<T> CList<T> {
     /// # Arguments
     ///
     /// * `node_addr` - The address of the starting node.
-    /// 
+    ///
     /// # Returns
     ///
     /// A vector containing all the elements from the starting address.
-   #[inline]
+    #[inline]
     pub fn collect_from_addr(&self, node_addr: usize, capacity_hint: Option<usize>) -> Vec<T>
     where
         T: Clone,
@@ -532,18 +532,20 @@ impl<T> CList<T> {
     }
 
     /// Fills a buffer with the data from the list starting from a given node address.
-    /// 
+    /// It will fill the buffer up to `n` elements, stoping when it reaches the root node.
+    ///
+    ///
     /// # Arguments
     ///
     /// * `buf` - The buffer to fill.
     /// * `node_addr` - The starting address of the node.
     /// * `data` - An iterator of elements to insert.
-    /// * `n` - Max number of elements to insert. 
+    /// * `n` - Max number of elements to insert.
     ///
     /// # Returns
     ///
     /// The filled buffer.
-   fn populate_buf_n(&self, mut buf: Vec<T>, mut node_addr: usize, mut n: usize) -> Vec<T>
+    fn populate_buf_n(&self, mut buf: Vec<T>, mut node_addr: usize, mut n: usize) -> Vec<T>
     where
         T: Clone,
     {
@@ -561,8 +563,9 @@ impl<T> CList<T> {
         buf
     }
 
-    /// Collects n elements from the list into a vector.
-    /// 
+    /// Collects up to `n` elements from the list into a vector.
+    /// It will stop when it reaches the root node.
+    ///
     /// # Arguments
     ///
     /// * `n` - Max number of elements to collect.
@@ -570,7 +573,7 @@ impl<T> CList<T> {
     /// # Returns
     ///
     /// A vector containing all the elements in the list.
-   #[inline]
+    #[inline]
     pub fn collect_n(&self, n: usize) -> Vec<T>
     where
         T: Clone,
@@ -582,6 +585,7 @@ impl<T> CList<T> {
     }
 
     /// Collects up to `n` elements, starting from a given position in the list
+    /// It will stop when it reaches the root node.
     ///
     /// If the list is empty, if `n` is zero, or if the position is out of bounds,
     /// it returns an empty vector.
@@ -590,7 +594,7 @@ impl<T> CList<T> {
     ///
     /// * `n` - The the number of elements to collect.
     /// * `pos` - The starting position in the list.
-    /// 
+    ///
     /// # Returns
     ///
     /// A vector containing the collected elements.
@@ -598,7 +602,7 @@ impl<T> CList<T> {
     /// # Panics
     ///
     /// This function will panic if the list is modified during iteration.
-   pub fn collect_n_from_pos(&self, n: usize, pos: usize) -> Vec<T>
+    pub fn collect_n_from_pos(&self, n: usize, pos: usize) -> Vec<T>
     where
         T: Clone,
     {
@@ -667,7 +671,7 @@ mod tests {
     fn test_from_vec() {
         let assert_from_vec_roundtrip = |vec: Vec<_>| {
             let clist = CList::from_vec(vec.clone());
-            assert_eq!(clist.collect(), vec) ;
+            assert_eq!(clist.collect(), vec);
             assert_eq!(clist.collect_rev(), vec);
         };
 
@@ -676,7 +680,6 @@ mod tests {
         assert_from_vec_roundtrip(vec!['a', 'b']);
         assert_from_vec_roundtrip(vec!['a', 'b', 'c']);
     }
-
 
     #[test]
     fn test_insert_ref() {
@@ -716,20 +719,19 @@ mod tests {
 
     #[test]
     fn test_is_empty() {
-       let mut clist = CList::with_capacity(2);
-       assert_eq!(clist.is_empty(), true);
+        let mut clist = CList::with_capacity(1);
+        assert_eq!(clist.is_empty(), true);
 
-       let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
-       assert_eq!(clist.is_empty(), false);
+        let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
+        assert_eq!(clist.is_empty(), false);
 
-       clist.remove(a_addr);
-       assert_eq!(clist.is_empty(), true);
-
+        clist.remove(a_addr);
+        assert_eq!(clist.is_empty(), true);
     }
 
     #[should_panic]
     #[test]
-    fn test_assert_not_free(){
+    fn test_assert_not_free() {
         let mut clist = CList::with_capacity(1);
         let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
         clist.remove(a_addr);
@@ -741,17 +743,16 @@ mod tests {
         let mut clist = CList::with_capacity(1);
         let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
         assert_eq!(*clist.get(a_addr), 'a');
-        assert_ne!(*clist.get(a_addr), 'b');
     }
 
     #[test]
     fn test_get_mut() {
         let mut clist = CList::with_capacity(1);
-        let _a_addr = clist.insert_ref('a', ROOT_ADDR, true);
-        let b_addr = clist.insert_ref('b', ROOT_ADDR, true);
-        
-        assert_eq!(*clist.get(b_addr), 'b');
-        assert_ne!(*clist.get(b_addr), 'a');
+        let a_addr = clist.insert_ref('a', ROOT_ADDR, true);
+        let chr = clist.get_mut(a_addr);
+        *chr = 'z';
+
+        assert_eq!(*clist.get_mut(a_addr), 'z');
     }
 
     #[test]
