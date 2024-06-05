@@ -10,7 +10,9 @@ use mini::{
 fn run_input_reader_thread(input_event_sender: Sender<Event>) {
     std::thread::spawn(move || loop {
         let event = read().expect("Failed to read event.");
-        input_event_sender.send(event).expect("Failed to send event.");
+        input_event_sender
+            .send(event)
+            .expect("Failed to send event.");
     });
 }
 
